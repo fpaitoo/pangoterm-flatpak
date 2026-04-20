@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata for Flathub.
+
+  Every Flathub submission is validated against AppStream spec + Flathub's
+  additional rules. Run locally before submitting:
+
+    appstreamcli validate flatpak/com.pangoterm.desktop.metainfo.xml
+    flatpak run org.freedesktop.appstream-glib validate \
+      flatpak/com.pangoterm.desktop.metainfo.xml
+
+  Screenshots: host PNGs at stable public URLs (GitHub raw, your CDN).
+  Dimensions should be 1248x702, 1600x900, or similar 16:9 — Flathub
+  reviewers reject low-res or cropped shots.
+-->
+<component type="desktop-application">
+  <id>com.pangoterm.desktop</id>
+
+  <name>PangoTerm</name>
+  <summary>Modern SSH client with SFTP, port forwarding, and monitoring</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <developer id="com.pangoterm">
+    <name>PangoTerm</name>
+  </developer>
+
+  <url type="homepage">https://pangoterm.com</url>
+  <url type="bugtracker">https://github.com/fpaitoo/ssh-client/issues</url>
+  <url type="help">https://pangoterm.com/docs</url>
+  <url type="vcs-browser">https://github.com/fpaitoo/ssh-client</url>
+
+  <description>
+    <p>
+      PangoTerm is a cross-platform SSH client for developers and system
+      administrators. It bundles a modern terminal, SFTP file manager, SSH
+      port forwarding, and live server monitoring into a single desktop app.
+    </p>
+    <p>Key features:</p>
+    <ul>
+      <li>Full xterm-compatible terminal with multi-tab support</li>
+      <li>Integrated SFTP file browser with drag-and-drop transfers</li>
+      <li>Local, remote, and dynamic SOCKS port forwarding</li>
+      <li>Live monitoring widgets (CPU, memory, disk, network)</li>
+      <li>Saved connections with secure keychain-backed password storage</li>
+      <li>Command snippets with quick-paste into active sessions</li>
+      <li>Optional cloud sync of connections and preferences (Pro)</li>
+      <li>Optional Google Drive backup with client-side AES-256-GCM encryption</li>
+    </ul>
+    <p>
+      PangoTerm never transmits your passwords, private keys, terminal
+      output, or file contents to our servers.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">com.pangoterm.desktop.desktop</launchable>
+
+  <categories>
+    <category>Network</category>
+    <category>RemoteAccess</category>
+    <category>TerminalEmulator</category>
+    <category>Development</category>
+  </categories>
+
+  <keywords>
+    <keyword>ssh</keyword>
+    <keyword>sftp</keyword>
+    <keyword>terminal</keyword>
+    <keyword>remote</keyword>
+    <keyword>port forwarding</keyword>
+    <keyword>tunnel</keyword>
+  </keywords>
+
+  <!--
+    Screenshots.
+
+    REPLACE the URLs before submission. Host high-res PNGs somewhere
+    public (GitHub raw content works well). Flathub rejects broken or
+    placeholder image links during review.
+
+    Recommended sizes: 1600x900 primary; additional shots of 1248x702 OK.
+  -->
+  <screenshots>
+    <screenshot type="default">
+      <caption>PangoTerm connected to a server via SSH</caption>
+      <image>https://pangoterm.com/screenshots/terminal.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Integrated SFTP file browser</caption>
+      <image>https://pangoterm.com/screenshots/sftp.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Live system monitoring widgets</caption>
+      <image>https://pangoterm.com/screenshots/monitoring.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Settings — privacy and telemetry controls</caption>
+      <image>https://pangoterm.com/screenshots/privacy.png</image>
+    </screenshot>
+  </screenshots>
+
+  <!--
+    Content rating. All values default to "none" for a developer tool
+    with no user-generated content, ads, or gambling.
+    See https://hughsie.github.io/oars/generate.html
+  -->
+  <content_rating type="oars-1.1" />
+
+  <!--
+    Branding. Flathub uses this to generate the app tile color.
+    Pick a primary color from your app icon/logo.
+  -->
+  <branding>
+    <color type="primary" scheme_preference="light">#4ec9b0</color>
+    <color type="primary" scheme_preference="dark">#3ba892</color>
+  </branding>
+
+  <!--
+    Release history. Every published version needs an entry. Flathub
+    shows these in the "What's new" section of the app page.
+    Keep descriptions user-focused, not changelog-style.
+  -->
+  <releases>
+    <release version="1.0.5" date="2026-04-20">
+      <description>
+        <p>
+          Reliability and privacy improvements. Password prompts now
+          appear reliably during SSH connect (previously a rare race
+          caused silent failures on some systems). Cross-device sync of
+          saved passwords now works correctly via Google Drive. Added
+          opt-in anonymous usage telemetry so we can prioritize fixes —
+          manage in Settings &#x2192; Privacy &amp; Telemetry.
+        </p>
+      </description>
+    </release>
+  </releases>
+
+  <!--
+    Required sandbox permissions declared to users via AppStream.
+    Keep these honest — Flathub reviewers cross-check against finish-args
+    in the manifest.
+  -->
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+
+</component>

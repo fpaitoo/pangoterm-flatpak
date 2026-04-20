@@ -1,0 +1,142 @@
+#
+# Flatpak manifest for PangoTerm — publishes to Flathub as com.pangoterm.desktop.
+# Matches the App ID in src-tauri/tauri.conf.json.
+#
+# Runtime: org.gnome.Platform//46 (webkit2gtk-6.0, GTK4, libsoup3).
+# SDK extensions: rust-stable + node20 for the Tauri build chain.
+#
+# Build model (Flathub constraint: no network at build time):
+#  1. Source tarball pulled from a public GitHub release
+#     (github.com/fpaitoo/ssh-client/releases — the tarball must be PUBLIC
+#      even if the repo is private; attach it as a release asset).
+#  2. cargo-sources.json pre-declares every crate so cargo works offline.
+#  3. node-sources.json pre-declares every npm package so npm works offline.
+#
+# To ship a new version, update the `sha256` + `tag` fields in the sources
+# block and regenerate the two sources files (see scripts/flatpak-gen-sources.sh).
+#
+
+app-id: com.pangoterm.desktop
+runtime: org.gnome.Platform
+runtime-version: '46'
+sdk: org.gnome.Sdk
+
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  - org.freedesktop.Sdk.Extension.node20
+
+command: pangoterm
+
+finish-args:
+  # --- Required for the app to function ---
+  - --share=network               # SSH, sync backend, Google Drive, updater (disabled in Flatpak build)
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri                  # GPU-accelerated WebKit rendering
+
+  # --- Keychain / credentials ---
+  # tauri-plugin-keyring uses the freedesktop Secret Service API via D-Bus.
+  - --talk-name=org.freedesktop.secrets
+
+  # --- SSH ---
+  # Read-only access to the user's SSH config + keys. Using xdg-config
+  # rather than home: is narrower, but many users keep ~/.ssh, not
+  # ~/.config/ssh, so we access home for that subdir specifically.
+  - --filesystem=~/.ssh:ro
+  # ssh-agent socket so key-agent auth works (SSH_AUTH_SOCK).
+  - --socket=ssh-auth
+
+  # --- SFTP transfers ---
+  # Users need to drop files from / save files to their download dir and
+  # project dirs. xdg-download gives the standard Downloads folder;
+  # xdg-documents covers typical project working dirs.
+  - --filesystem=xdg-download
+  - --filesystem=xdg-documents
+
+  # --- Clipboard / notifications ---
+  - --talk-name=org.freedesktop.Notifications
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/node20/bin
+  build-args:
+    # Flathub-sanctioned offline flag. Cargo + npm must use their
+    # pre-populated caches declared via {cargo,node}-sources.json.
+    - --share=network  # REMOVE this line when submitting to Flathub.
+                       # It's here for local test-builds only. Flathub
+                       # CI will reject a manifest with network build
+                       # access. Once cargo-sources.json + node-sources.json
+                       # are complete, the build runs fully offline.
+  env:
+    CARGO_HOME: /run/build/pangoterm/cargo
+    NPM_CONFIG_CACHE: /run/build/pangoterm/npm-cache
+    # Tauri v2 on Linux defaults to webkit2gtk-4.1. GNOME 46 runtime
+    # provides webkit2gtk-6.0. If the Rust build fails linking against
+    # libwebkit2gtk-4.1, uncomment the feature flag below OR switch the
+    # runtime to org.freedesktop.Platform//23.08 which has 4.1.
+    # RUSTFLAGS: "--cfg=feature=\"webkitgtk-6-0\""
+
+modules:
+  - name: pangoterm
+    buildsystem: simple
+    build-commands:
+      # ----- Frontend bundle (Vite) -----
+      # package-lock.json must be present; npm install runs offline against
+      # the cache populated by node-sources.json.
+      - npm install --offline --cache=$NPM_CONFIG_CACHE
+      - npm run build
+
+      # ----- Rust bundle (Tauri backend) -----
+      # --bundles none: Flathub installs the binary + desktop files via
+      # the build-commands below; Tauri's built-in bundler (deb/rpm/AppImage)
+      # is not wanted here.
+      # Updater artifacts are also disabled — Flatpak updates come from the
+      # user's package manager, not from the app.
+      - |
+        cd src-tauri && cargo build --release --offline --locked
+        cd ..
+
+      # ----- Install to /app -----
+      - install -Dm755 src-tauri/target/release/PangoTerm /app/bin/pangoterm
+
+      # Desktop entry
+      - install -Dm644 flatpak/com.pangoterm.desktop.desktop
+          /app/share/applications/com.pangoterm.desktop.desktop
+
+      # AppStream metainfo
+      - install -Dm644 flatpak/com.pangoterm.desktop.metainfo.xml
+          /app/share/metainfo/com.pangoterm.desktop.metainfo.xml
+
+      # Icons (hicolor — standard Linux scheme)
+      - install -Dm644 src-tauri/icons/32x32.png
+          /app/share/icons/hicolor/32x32/apps/com.pangoterm.desktop.png
+      - install -Dm644 src-tauri/icons/128x128.png
+          /app/share/icons/hicolor/128x128/apps/com.pangoterm.desktop.png
+      - install -Dm644 src-tauri/icons/128x128@2x.png
+          /app/share/icons/hicolor/256x256/apps/com.pangoterm.desktop.png
+
+    sources:
+      # ---- The source tarball (you attach this to a GitHub release) ----
+      #
+      # Regenerate on every version bump:
+      #   1. git tag v1.0.5 && git push origin v1.0.5
+      #   2. bash scripts/make-flatpak-source-tarball.sh v1.0.5
+      #         -> produces pangoterm-1.0.5.tar.gz
+      #   3. Upload that tarball to the GitHub release as a release asset
+      #      (this MUST be a public asset even though the repo is private —
+      #       release assets on a private repo are not publicly accessible,
+      #       so you must either make the repo public, or use a public
+      #       source mirror / S3 bucket for the tarball).
+      #   4. Update url + sha256 below.
+      #
+      # REPLACE THIS URL + SHA256 WHEN SHIPPING EACH VERSION:
+      - type: archive
+        url: https://github.com/fpaitoo/ssh-client/releases/download/v1.0.5/pangoterm-1.0.5.tar.gz
+        sha256: REPLACE_WITH_TARBALL_SHA256
+        dest: .
+
+      # ---- Offline source caches ----
+      # Regenerate after any Cargo.lock / package-lock.json change:
+      #   bash scripts/flatpak-gen-sources.sh
+      - cargo-sources.json
+      - node-sources.json

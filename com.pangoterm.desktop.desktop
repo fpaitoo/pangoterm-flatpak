@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=PangoTerm
+GenericName=SSH Client
+Comment=Modern SSH client with SFTP, port forwarding, and monitoring
+Exec=pangoterm %U
+Icon=com.pangoterm.desktop
+Terminal=false
+Categories=Network;RemoteAccess;TerminalEmulator;Development;
+Keywords=ssh;sftp;terminal;remote;port forwarding;tunnel;
+StartupNotify=true
+StartupWMClass=PangoTerm
+MimeType=x-scheme-handler/ssh;x-scheme-handler/sftp;
