@@ -6,9 +6,10 @@
 # SDK extensions: rust-stable + node20 for the Tauri build chain.
 #
 # Build model (Flathub constraint: no network at build time):
-#  1. Source tarball pulled from a public GitHub release
-#     (github.com/fpaitoo/ssh-client/releases — the tarball must be PUBLIC
-#      even if the repo is private; attach it as a release asset).
+#  1. Source tarball pulled from a public GitHub release on
+#     github.com/fpaitoo/pangoterm-flatpak — auto-published by the
+#     `Publish Flatpak source tarball` workflow in the private source
+#     repo when a version tag is pushed (.github/workflows/publish-flatpak-tarball.yml).
 #  2. cargo-sources.json pre-declares every crate so cargo works offline.
 #  3. node-sources.json pre-declares every npm package so npm works offline.
 #
@@ -131,8 +132,8 @@ modules:
       #
       # REPLACE THIS URL + SHA256 WHEN SHIPPING EACH VERSION:
       - type: archive
-        url: https://github.com/fpaitoo/ssh-client/releases/download/v1.0.5/pangoterm-1.0.5.tar.gz
-        sha256: REPLACE_WITH_TARBALL_SHA256
+        url: https://github.com/fpaitoo/pangoterm-flatpak/releases/download/v1.0.5/pangoterm-1.0.5.tar.gz
+        sha256: 82b14e6566b1ac345e7647074b3feeb33230368d67519ce0a1b93e185e797606
         dest: .
 
       # ---- Offline source caches ----
