@@ -102,13 +102,23 @@ modules:
       - npm run build
 
       # ----- Rust bundle (Tauri backend) -----
-      # --bundles none: Flathub installs the binary + desktop files via
-      # the build-commands below; Tauri's built-in bundler (deb/rpm/AppImage)
-      # is not wanted here.
+      # We call cargo directly instead of `npm run tauri build` because the
+      # Tauri CLI would try to run its own bundler (deb/rpm/AppImage) which
+      # is wrong inside a flatpak-builder build — flatpak-builder installs
+      # the binary + desktop files itself via the build-commands below.
+      #
+      # But: the Tauri CLI normally sets `--features custom-protocol` on
+      # the cargo invocation. Without that feature, the resulting binary
+      # tries to load the UI from tauri.conf.json's `devUrl`
+      # (http://localhost:5174) at runtime instead of serving the embedded
+      # src/dist/ bundle via the tauri:// custom protocol. User sees
+      # "unable to connect to localhost" + module loading errors.
+      # We have to pass --features custom-protocol manually here.
+      #
       # Updater artifacts are also disabled — Flatpak updates come from the
       # user's package manager, not from the app.
       - |
-        cd src-tauri && cargo build --release --offline --locked
+        cd src-tauri && cargo build --release --offline --locked --features custom-protocol
         cd ..
 
       # ----- Install to /app -----
