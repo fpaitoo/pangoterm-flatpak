@@ -18,8 +18,11 @@
 #
 
 app-id: com.pangoterm.desktop
+# GNOME 48 runtime (supported; GNOME 46 went EOL 2025-04-17).
+# freedesktop-sdk 24.08 base -> rust-stable 1.85+ (edition2024 support,
+# required by dlopen2_derive in the tauri-plugin-keyring chain).
 runtime: org.gnome.Platform
-runtime-version: '46'
+runtime-version: '48'
 sdk: org.gnome.Sdk
 
 sdk-extensions:
@@ -70,7 +73,11 @@ build-options:
                        # are complete, the build runs fully offline.
   env:
     CARGO_HOME: /run/build/pangoterm/cargo
-    NPM_CONFIG_CACHE: /run/build/pangoterm/npm-cache
+    # flatpak-node-generator (xdg-layout default) unpacks the pre-populated
+    # npm cache under $PWD/flatpak-node/npm-cache. NPM must be pointed AT
+    # that directory, not a sibling one, or `npm ci --offline` errors with
+    # ENOTCACHED on every transitive tarball.
+    NPM_CONFIG_CACHE: /run/build/pangoterm/flatpak-node/npm-cache
     # Tauri v2 on Linux defaults to webkit2gtk-4.1. GNOME 46 runtime
     # provides webkit2gtk-6.0. If the Rust build fails linking against
     # libwebkit2gtk-4.1, uncomment the feature flag below OR switch the
@@ -84,7 +91,14 @@ modules:
       # ----- Frontend bundle (Vite) -----
       # package-lock.json must be present; npm install runs offline against
       # the cache populated by node-sources.json.
-      - npm install --offline --cache=$NPM_CONFIG_CACHE
+      #
+      # --omit=dev is required because node-sources.json was generated with
+      # flatpak-node-generator --no-devel for payload size (excludes
+      # devDependencies like Playwright). Without --omit=dev here, npm
+      # walks the full lockfile including devDeps and fails with
+      # ENOTCACHED on packages like ws@8.19.0 that only exist in the
+      # dev subtree.
+      - npm ci --omit=dev --offline --cache=$NPM_CONFIG_CACHE
       - npm run build
 
       # ----- Rust bundle (Tauri backend) -----
