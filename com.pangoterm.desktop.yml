@@ -99,6 +99,23 @@ modules:
       # ENOTCACHED on packages like ws@8.19.0 that only exist in the
       # dev subtree.
       - npm ci --omit=dev --offline --cache=$NPM_CONFIG_CACHE
+
+      # Write the build-time env Vite needs. Only VITE_GOOGLE_CLIENT_ID
+      # is baked here — it's public by design (appears in every OAuth
+      # consent URL). VITE_API_URL defaults to backend.pangoterm.com
+      # at runtime, but we set it explicitly so there's no confusion.
+      #
+      # VITE_GOOGLE_CLIENT_SECRET is deliberately NOT set. The code→tokens
+      # exchange now runs server-side via POST backend.pangoterm.com/
+      # api/admin/public/auth/google/exchange (see
+      # src/services/googleAuthService.js + apiService.auth.googleOAuthExchange).
+      # Same for refresh. Keeps the secret out of the Flatpak bundle +
+      # the public manifest repo.
+      - |
+        cat > .env <<'EOF'
+        VITE_API_URL=https://backend.pangoterm.com/api/admin
+        VITE_GOOGLE_CLIENT_ID=496388102020-ipvfltjh85n2sj8h7lj15smmomeq7rkf.apps.googleusercontent.com
+        EOF
       - npm run build
 
       # ----- Rust bundle (Tauri backend) -----
